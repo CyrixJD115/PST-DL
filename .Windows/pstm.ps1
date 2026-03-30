@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $PSTM_VERSION = "1.0.0"
 $PSTM_REPO = "CyrixJD115/PST-Manager"
