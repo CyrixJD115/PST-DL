@@ -75,33 +75,37 @@ function Get-LatestPstmVersion {
     return ""
 }
 
-function Find-SevenZip {
-    if (Get-Command 7z -ErrorAction SilentlyContinue) { return "7z" }
-    if (Test-Path "C:\Program Files\7-Zip\7z.exe") { return "C:\Program Files\7-Zip\7z.exe" }
-    if (Test-Path "C:\Program Files (x86)\7-Zip\7z.exe") { return "C:\Program Files (x86)\7-Zip\7z.exe" }
-    if (Get-Command 7zr -ErrorAction SilentlyContinue) { return "7zr" }
-    return $null
+function Ensure-Uv {
+    try {
+        uv --version | Out-Null
+        return
+    } catch {}
+
+    Write-Host -ForegroundColor Yellow "> uv not found. Installing uv..."
+    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+    $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
+
+    try {
+        uv --version | Out-Null
+        Write-Host -ForegroundColor Green "* uv installed successfully!"
+    } catch {
+        Write-Host -ForegroundColor Red "x Error: Failed to install uv."
+        throw "uv install failed"
+    }
 }
 
-function New-DesktopShortcut {
-    $exePath = Join-Path $PST_DATA_DIR "PalworldSaveTools.exe"
-    if (-not (Test-Path $exePath)) {
-        $exePath = Get-ChildItem -Path $PST_DATA_DIR -Filter "PalworldSaveTools.exe" -Recurse | Select-Object -First 1 -ExpandProperty FullName
-    }
-
-    if ($exePath -and (Test-Path $exePath)) {
-        $desktop = [Environment]::GetFolderPath("Desktop")
-        $shortcutPath = Join-Path $desktop "PalworldSaveTools.lnk"
-        $shell = New-Object -ComObject WScript.Shell
-        $shortcut = $shell.CreateShortcut($shortcutPath)
-        $shortcut.TargetPath = $exePath
-        $shortcut.WorkingDirectory = Split-Path $exePath
-        $shortcut.Description = "PalworldSaveTools"
-        $shortcut.Save()
-        Write-Host -ForegroundColor Green "* Desktop shortcut created!"
-    } else {
-        Write-Host -ForegroundColor Yellow "  Warning: Could not find PalworldSaveTools.exe for shortcut."
-    }
+function New-PstLauncher {
+    $launcher = Join-Path $PST_DATA_DIR "pst.ps1"
+    $sourceDir = Join-Path $PST_DATA_DIR "source"
+    $content = @"
+Set-Location "$sourceDir"
+uv python install 3.13
+uv run ./start.py `$args
+"@
+    Set-Content -Path $launcher -Value $content -Force
+    Write-Host -ForegroundColor Green "* Launcher generated: " -NoNewline
+    Write-Host -ForegroundColor Cyan $launcher
 }
 
 function Install-PST {
@@ -127,10 +131,10 @@ function Install-PST {
     Write-Host -ForegroundColor White " $tagName"
     Write-Host ""
 
-    $downloadUrl = "https://github.com/$PST_REPO/releases/download/$tagName/PST_standalone_v$version.7z"
-    $outputFilename = Join-Path $env:TEMP "PST_standalone_v$version.7z"
+    $downloadUrl = "https://github.com/$PST_REPO/archive/refs/tags/$tagName.zip"
+    $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
 
-    Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading release..."
+    Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading source code..."
     Write-Host -ForegroundColor Cyan "  URL: " -NoNewline
     Write-Host -ForegroundColor White $downloadUrl
     Write-Host ""
@@ -154,15 +158,9 @@ function Install-PST {
     }
     Write-Host ""
 
-    $sevenZip = Find-SevenZip
-    if (-not $sevenZip) {
-        Write-Host -ForegroundColor Red "x Error: 7-Zip not found. Please install 7-Zip."
-        exit 1
-    }
-
     Write-Host -ForegroundColor Yellow "> Step 2/4: Extracting archive..."
     Write-Host -ForegroundColor Cyan "  Extracting to: " -NoNewline
-    Write-Host -ForegroundColor White $PST_DATA_DIR
+    Write-Host -ForegroundColor White "$PST_DATA_DIR\source"
     Write-Host ""
 
     if (Test-Path $PST_DATA_DIR) {
@@ -171,7 +169,18 @@ function Install-PST {
     New-Item -ItemType Directory -Path $PST_DATA_DIR -Force | Out-Null
 
     try {
-        & $sevenZip x "$outputFilename" -o"$PST_DATA_DIR" -y | Out-Null
+        $extractTmp = Join-Path $env:TEMP "PST_extract_$version"
+        if (Test-Path $extractTmp) { Remove-Item $extractTmp -Recurse -Force }
+        Expand-Archive -Path $outputFilename -DestinationPath $extractTmp -Force
+
+        $extractedDir = Join-Path $extractTmp "PalworldSaveTools-$version"
+        if (Test-Path $extractedDir) {
+            Move-Item -Path $extractedDir -Destination (Join-Path $PST_DATA_DIR "source") -Force
+        } else {
+            Write-Host -ForegroundColor Red "x Error: Failed to find extracted directory."
+            exit 1
+        }
+        Remove-Item $extractTmp -Recurse -Force -ErrorAction SilentlyContinue
         Write-Host -ForegroundColor Green "* Extraction Complete!"
     } catch {
         Write-Host ""
@@ -194,7 +203,8 @@ function Install-PST {
 
     Write-Host -ForegroundColor Yellow "> Step 4/4: Finalizing..."
     Write-Host ""
-    New-DesktopShortcut
+    Ensure-Uv
+    New-PstLauncher
     Write-Host ""
 
     Show-Divider
@@ -204,10 +214,7 @@ function Install-PST {
     Write-Host ""
     Write-Host -ForegroundColor White "How to run:"
     Write-Host ""
-    Write-Host -ForegroundColor Green "  Double-click PalworldSaveTools on your Desktop"
-    Write-Host ""
-    Write-Host -ForegroundColor Cyan "  Or: " -NoNewline
-    Write-Host -ForegroundColor White $PST_DATA_DIR
+    Write-Host -ForegroundColor Cyan "  $PST_DATA_DIR\pst.ps1"
     Write-Host ""
 }
 
@@ -241,10 +248,10 @@ function Upgrade-PST {
     Write-Host -ForegroundColor White " $tagName"
     Write-Host ""
 
-    $downloadUrl = "https://github.com/$PST_REPO/releases/download/$tagName/PST_standalone_v$version.7z"
-    $outputFilename = Join-Path $env:TEMP "PST_standalone_v$version.7z"
+    $downloadUrl = "https://github.com/$PST_REPO/archive/refs/tags/$tagName.zip"
+    $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
 
-    Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading release..."
+    Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading source code..."
     Write-Host -ForegroundColor Cyan "  URL: " -NoNewline
     Write-Host -ForegroundColor White $downloadUrl
     Write-Host ""
@@ -268,22 +275,27 @@ function Upgrade-PST {
     }
     Write-Host ""
 
-    $sevenZip = Find-SevenZip
-    if (-not $sevenZip) {
-        Write-Host -ForegroundColor Red "x Error: 7-Zip not found. Please install 7-Zip."
-        exit 1
-    }
-
     Write-Host -ForegroundColor Yellow "> Step 2/4: Extracting archive..."
     Write-Host -ForegroundColor Cyan "  Extracting to: " -NoNewline
-    Write-Host -ForegroundColor White $PST_DATA_DIR
+    Write-Host -ForegroundColor White "$PST_DATA_DIR\source"
     Write-Host ""
 
     Remove-Item $PST_DATA_DIR -Recurse -Force
     New-Item -ItemType Directory -Path $PST_DATA_DIR -Force | Out-Null
 
     try {
-        & $sevenZip x "$outputFilename" -o"$PST_DATA_DIR" -y | Out-Null
+        $extractTmp = Join-Path $env:TEMP "PST_extract_$version"
+        if (Test-Path $extractTmp) { Remove-Item $extractTmp -Recurse -Force }
+        Expand-Archive -Path $outputFilename -DestinationPath $extractTmp -Force
+
+        $extractedDir = Join-Path $extractTmp "PalworldSaveTools-$version"
+        if (Test-Path $extractedDir) {
+            Move-Item -Path $extractedDir -Destination (Join-Path $PST_DATA_DIR "source") -Force
+        } else {
+            Write-Host -ForegroundColor Red "x Error: Failed to find extracted directory."
+            exit 1
+        }
+        Remove-Item $extractTmp -Recurse -Force -ErrorAction SilentlyContinue
         Write-Host -ForegroundColor Green "* Extraction Complete!"
     } catch {
         Write-Host ""
@@ -306,7 +318,8 @@ function Upgrade-PST {
 
     Write-Host -ForegroundColor Yellow "> Step 4/4: Finalizing..."
     Write-Host ""
-    New-DesktopShortcut
+    Ensure-Uv
+    New-PstLauncher
     Write-Host ""
 
     Show-Divider
@@ -327,10 +340,6 @@ function Uninstall-PST {
     $confirm = Read-Host -Prompt "> Are you sure? [y/N]"
 
     if ($confirm -match '^[Yy]$') {
-        $desktop = [Environment]::GetFolderPath("Desktop")
-        $shortcutPath = Join-Path $desktop "PalworldSaveTools.lnk"
-        if (Test-Path $shortcutPath) { Remove-Item $shortcutPath -Force }
-
         Remove-Item $PST_DATA_DIR -Recurse -Force
         Write-Host -ForegroundColor Green "* PalworldSaveTools uninstalled successfully."
     } else {
@@ -347,10 +356,6 @@ function Uninstall-All {
 
     if ($confirm -match '^[Yy]$') {
         if (Test-Path $PST_DATA_DIR) { Remove-Item $PST_DATA_DIR -Recurse -Force }
-
-        $desktop = [Environment]::GetFolderPath("Desktop")
-        $shortcutPath = Join-Path $desktop "PalworldSaveTools.lnk"
-        if (Test-Path $shortcutPath) { Remove-Item $shortcutPath -Force }
 
         Remove-Item $PSTM_DIR -Recurse -Force
 
