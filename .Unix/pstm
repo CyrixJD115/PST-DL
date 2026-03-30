@@ -209,7 +209,9 @@ do_install() {
     echo ""
     echo -e "${BOLD}How to run:${NC}"
     echo ""
-    echo -e "  ${CYAN}$PST_DATA_DIR/pst.sh${NC}"
+    echo -e "  ${CYAN}pstm run${NC}"
+    echo ""
+    echo -e "  ${DIM}Or directly: ${CYAN}$PST_DATA_DIR/pst${NC}"
     echo ""
 }
 
