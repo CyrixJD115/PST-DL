@@ -51,6 +51,7 @@ show_help() {
     echo -e "  ${GREEN}-uninstall${NC}            Uninstall PalworldSaveTools"
     echo -e "  ${GREEN}-v${NC}, ${GREEN}-version${NC}         Show pstm and remote PST version"
     echo -e "  ${GREEN}-g${NC}, ${GREEN}-github${NC}          Open PalworldSaveTools GitHub page"
+    echo -e "  ${GREEN}run${NC}                Run PalworldSaveTools"
     echo -e "  ${GREEN}-uninstall-all${NC}        Uninstall pstm and PalworldSaveTools"
     echo -e "  ${GREEN}-update-self${NC}          Update pstm to the latest version"
     echo ""
@@ -97,7 +98,7 @@ check_for_pstm_update() {
 }
 
 ensure_uv() {
-    if command -v uv >/dev/null 2>&1; then
+    if uv --version >/dev/null 2>&1; then
         return 0
     fi
 
@@ -106,7 +107,7 @@ ensure_uv() {
 
     export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
-    if command -v uv >/dev/null 2>&1; then
+    if uv --version >/dev/null 2>&1; then
         echo -e "${GREEN}* uv installed successfully!${NC}"
         return 0
     else
@@ -116,9 +117,10 @@ ensure_uv() {
 }
 
 generate_pst_launcher() {
-    local launcher="$PST_DATA_DIR/pst.sh"
+    local launcher="$PST_DATA_DIR/pst"
     echo "#!/bin/bash" > "$launcher"
     echo "cd \"$PST_DATA_DIR/source\"" >> "$launcher"
+    echo "uv python install 3.13" >> "$launcher"
     echo "uv run ./start.py \"\$@\"" >> "$launcher"
     chmod +x "$launcher"
     echo -e "${GREEN}* Launcher generated: ${CYAN}$launcher${NC}"
@@ -336,6 +338,16 @@ do_uninstall_all() {
     fi
 }
 
+do_run() {
+    if [ ! -f "$PST_DATA_DIR/pst" ]; then
+        echo -e "${RED}x Error: PalworldSaveTools is not installed.${NC}"
+        echo -e "${YELLOW}  Run ${CYAN}pstm -i${NC} to install first.${NC}"
+        exit 1
+    fi
+
+    exec "$PST_DATA_DIR/pst" "$@"
+}
+
 do_version() {
     banner
     echo -e "${BOLD}pstm${NC}      v${PSTM_VERSION}"
@@ -399,6 +411,9 @@ case "${1:-}" in
         ;;
     -g|-github)
         do_github
+        ;;
+    run)
+        do_run
         ;;
     -uninstall)
         do_uninstall
