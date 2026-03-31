@@ -12,12 +12,12 @@ $PSTM_SCRIPT = Join-Path $PSTM_DIR "pstm.ps1"
 function Show-Banner {
     Write-Host ""
     Write-Host -ForegroundColor White @"
-██████╗ ███████╗████████╗    ██████╗ ██╗     
-██╔══██╗██╔════╝╚══██╔══╝    ██╔══██╗██║     
-██████╔╝███████╗   ██║       ██║  ██║██║     
-██╔═══╝ ╚════██║   ██║       ██║  ██║██║     
-██║     ███████║   ██║       ██████╔╝███████╗
-╚═╝     ╚══════╝   ╚═╝       ╚═════╝ ╚══════╝
+██████╗ ███████╗████████╗███╗   ███╗
+██╔══██╗██╔════╝╚══██╔══╝████╗ ████║
+██████╔╝███████╗   ██║   ██╔████╔██║
+██╔═══╝ ╚════██║   ██║   ██║╚██╔╝██║
+██║     ███████║   ██║   ██║ ╚═╝ ██║
+╚═╝     ╚══════╝   ╚═╝   ╚═╝     ╚═╝
 "@
     Write-Host ""
 }
@@ -97,22 +97,10 @@ function Ensure-Uv {
 }
 
 function New-PstLauncher {
-    $pstExe = Join-Path $PST_DATA_DIR "pst.exe"
     $pstPs1 = Join-Path $PST_DATA_DIR "pst.ps1"
     $sourceDir = Join-Path $PST_DATA_DIR "source"
-
-    try {
-        $apiUrl = "https://api.github.com/repos/$PSTM_REPO/releases/latest"
-        $release = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing
-        $asset = $release.assets | Where-Object { $_.name -eq "pst.exe" } | Select-Object -First 1
-        if ($asset) {
-            Write-Host -ForegroundColor Yellow "> Downloading pst.exe..."
-            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $pstExe -UseBasicParsing
-            Write-Host -ForegroundColor Green "* Launcher generated: " -NoNewline
-            Write-Host -ForegroundColor Cyan $pstExe
-            return
-        }
-    } catch {}
+    $icoPath = Join-Path $PST_DATA_DIR "pstm.ico"
+    $shortcutPath = Join-Path $env:USERPROFILE "Desktop\PST.lnk"
 
     $content = @"
 Set-Location "$sourceDir"
@@ -122,6 +110,27 @@ uv run ./start.py `$args
     Set-Content -Path $pstPs1 -Value $content -Force
     Write-Host -ForegroundColor Green "* Launcher generated: " -NoNewline
     Write-Host -ForegroundColor Cyan $pstPs1
+
+    try {
+        Write-Host -ForegroundColor Yellow "> Downloading icon..."
+        Invoke-WebRequest -Uri "${PSTM_RAW_BASE}/pstm.ico" -OutFile $icoPath -UseBasicParsing
+        Write-Host -ForegroundColor Green "* Icon downloaded: " -NoNewline
+        Write-Host -ForegroundColor Cyan $icoPath
+    } catch {
+        Write-Host -ForegroundColor Yellow "! Warning: Failed to download icon."
+    }
+
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($shortcutPath)
+    $Shortcut.TargetPath = "powershell.exe"
+    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$pstPs1`""
+    $Shortcut.WorkingDirectory = $sourceDir
+    if (Test-Path $icoPath) {
+        $Shortcut.IconLocation = $icoPath
+    }
+    $Shortcut.Save()
+    Write-Host -ForegroundColor Green "* Desktop shortcut created: " -NoNewline
+    Write-Host -ForegroundColor Cyan $shortcutPath
 }
 
 function Install-PST {
@@ -356,6 +365,8 @@ function Uninstall-PST {
     $confirm = Read-Host -Prompt "> Are you sure? [y/N]"
 
     if ($confirm -match '^[Yy]$') {
+        $shortcutPath = Join-Path $env:USERPROFILE "Desktop\PST.lnk"
+        if (Test-Path $shortcutPath) { Remove-Item $shortcutPath -Force }
         Remove-Item $PST_DATA_DIR -Recurse -Force
         Write-Host -ForegroundColor Green "* PalworldSaveTools uninstalled successfully."
     } else {
@@ -371,6 +382,8 @@ function Uninstall-All {
     $confirm = Read-Host -Prompt "> Are you sure? [y/N]"
 
     if ($confirm -match '^[Yy]$') {
+        $shortcutPath = Join-Path $env:USERPROFILE "Desktop\PST.lnk"
+        if (Test-Path $shortcutPath) { Remove-Item $shortcutPath -Force }
         if (Test-Path $PST_DATA_DIR) { Remove-Item $PST_DATA_DIR -Recurse -Force }
 
         Remove-Item $PSTM_DIR -Recurse -Force
@@ -414,12 +427,9 @@ function Open-GitHub {
 }
 
 function Run-PST {
-    $pstExe = Join-Path $PST_DATA_DIR "pst.exe"
     $pstPs1 = Join-Path $PST_DATA_DIR "pst.ps1"
 
-    if (Test-Path $pstExe) {
-        & $pstExe @args
-    } elseif (Test-Path $pstPs1) {
+    if (Test-Path $pstPs1) {
         & $pstPs1 @args
     } else {
         Write-Host -ForegroundColor Red "x Error: PalworldSaveTools is not installed."
