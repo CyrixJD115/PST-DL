@@ -9,6 +9,11 @@ A cross-platform CLI version manager for [PalworldSaveTools](https://github.com/
 curl -LsSf https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Unix/install.sh | sh
 ```
 
+**Linux / macOS (verbose mode):**
+```bash
+curl -LsSf https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Unix/install.sh | sh -s -- --verbose
+```
+
 **Windows (PowerShell):**
 ```powershell
 irm https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Windows/install.ps1 | iex

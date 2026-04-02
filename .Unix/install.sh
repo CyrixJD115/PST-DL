@@ -13,6 +13,13 @@ BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m'
 
+VERBOSE=0
+case "${1:-}" in
+    --verbose|-v)
+        VERBOSE=1
+        ;;
+esac
+
 echo ""
 echo -e "${WHITE}"
 cat << 'EOF'
@@ -27,12 +34,25 @@ echo -e "${NC}"
 echo -e "${WHITE}════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "${BOLD}${WHITE}Installing pstm...${NC}"
+if [ $VERBOSE -eq 1 ]; then
+    echo -e "${DIM}  (verbose mode enabled)${NC}"
+fi
 echo ""
 
 mkdir -p "$HOME/.local/bin"
 
+if [ $VERBOSE -eq 1 ]; then
+    echo -e "${DIM}─ Download ───────────────────────────────────────────${NC}"
+    echo -e "${CYAN}  URL: ${WHITE}${PSTM_RAW_BASE}/.Unix/pstm${NC}"
+    echo -e "${CYAN}  To:  ${WHITE}$PSTM_BIN${NC}"
+fi
+
 echo -e "${YELLOW}> Downloading pstm...${NC}"
-curl -sL "${PSTM_RAW_BASE}/.Unix/pstm" -o "$PSTM_BIN" 2>/dev/null
+if [ $VERBOSE -eq 1 ]; then
+    curl -L "${PSTM_RAW_BASE}/.Unix/pstm" -o "$PSTM_BIN"
+else
+    curl -sL "${PSTM_RAW_BASE}/.Unix/pstm" -o "$PSTM_BIN" 2>/dev/null
+fi
 
 if [ ! -f "$PSTM_BIN" ] || [ ! -s "$PSTM_BIN" ]; then
     echo -e "${RED}x Error: Failed to download pstm.${NC}"
@@ -43,12 +63,23 @@ chmod +x "$PSTM_BIN"
 echo -e "${GREEN}* Downloaded to: ${CYAN}$PSTM_BIN${NC}"
 echo ""
 
+if [ $VERBOSE -eq 1 ]; then
+    echo -e "${DIM}─ Environment Info ─────────────────────────────────────${NC}"
+    echo -e "${CYAN}  Platform:${NC}   ${WHITE}$OSTYPE${NC}"
+    echo -e "${CYAN}  Shell:${NC}      ${WHITE}$SHELL${NC}"
+    echo -e "${CYAN}  Config dir:${NC} ${WHITE}$HOME/.local/bin${NC}"
+    echo ""
+fi
+
 SHELL_NAME=$(basename "$SHELL")
 PATH_UPDATED=0
 
 create_config_file() {
     local file="$1"
     if [ ! -f "$file" ]; then
+        if [ $VERBOSE -eq 1 ]; then
+            echo -e "${DIM}  Creating: ${CYAN}$file${NC}"
+        fi
         touch "$file"
     fi
 }
@@ -59,9 +90,16 @@ add_to_path() {
 
     create_config_file "$rc_file"
     if ! grep -qF '.local/bin' "$rc_file" 2>/dev/null; then
+        if [ $VERBOSE -eq 1 ]; then
+            echo -e "${DIM}  Adding PATH to: ${CYAN}$rc_file${NC}"
+        fi
         echo "" >> "$rc_file"
         echo "$line" >> "$rc_file"
         PATH_UPDATED=1
+    else
+        if [ $VERBOSE -eq 1 ]; then
+            echo -e "${DIM}  Already in PATH: ${DIM}${rc_file}${NC}"
+        fi
     fi
 }
 
@@ -93,6 +131,18 @@ if [ $PATH_UPDATED -eq 1 ]; then
     echo -e "${GREEN}* Added ~/.local/bin to PATH${NC}"
 else
     echo -e "${DIM}  ~/.local/bin already in PATH${NC}"
+fi
+
+if [ $VERBOSE -eq 1 ]; then
+    echo ""
+    echo -e "${DIM}─ Summary ────────────────────────────────────────────${NC}"
+    echo -e "${CYAN}  Binary installed:${NC}   ${GREEN}yes${NC}"
+    if [ $PATH_UPDATED -eq 1 ]; then
+        echo -e "${CYAN}  PATH updated:${NC}      ${GREEN}yes${NC}"
+    else
+        echo -e "${CYAN}  PATH updated:${NC}      ${DIM}no (already configured)${NC}"
+    fi
+    echo ""
 fi
 
 echo ""
