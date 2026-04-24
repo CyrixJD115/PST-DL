@@ -48,9 +48,9 @@ show_help() {
     echo ""
     echo -e "  ${GREEN}-h${NC}, ${GREEN}-help${NC}            Show this help message"
     echo -e "  ${GREEN}-v${NC}, ${GREEN}-version${NC}         Show pstm and remote PST version"
-    echo -e "  ${GREEN}-i${NC}, ${GREEN}-install${NC}          Download and install PalworldSaveTools"
+    echo -e "  ${GREEN}-i${NC}, ${GREEN}-install${NC} [channel]  Download and install PalworldSaveTools (${CYAN}main${NC}|${CYAN}beta${NC}|${CYAN}canary${NC})"
     echo -e "  ${GREEN}run${NC}                Run PalworldSaveTools"
-    echo -e "  ${GREEN}-u${NC}, ${GREEN}-upgrade${NC}          Update PalworldSaveTools to the latest version"
+    echo -e "  ${GREEN}-u${NC}, ${GREEN}-upgrade${NC}          Update PalworldSaveTools (uses installed channel)"
     echo -e "  ${GREEN}-update-self${NC}          Update pstm to the latest version"
     echo -e "  ${GREEN}-g${NC}, ${GREEN}-github${NC}          Open PalworldSaveTools GitHub page"
     echo -e "  ${GREEN}-uninstall${NC}            Uninstall PalworldSaveTools"
@@ -164,31 +164,54 @@ generate_pst_launcher() {
 }
 
 do_install() {
-    banner
-    divider
-    echo ""
-    echo -e "${BOLD}${WHITE}Installing PalworldSaveTools${NC}"
-    echo ""
+    local CHANNEL="${1:-main}"
 
-    echo -e "${YELLOW}> Fetching latest release info...${NC}"
-    local TAG_NAME
-    TAG_NAME=$(get_latest_pst_tag)
-
-    if [ -z "$TAG_NAME" ]; then
-        echo ""
-        echo -e "${RED}x Error: Failed to find the latest non-beta release.${NC}"
-        echo -e "${RED}  Check your internet connection.${NC}"
+    if [[ "$CHANNEL" != "main" && "$CHANNEL" != "beta" && "$CHANNEL" != "canary" ]]; then
+        echo -e "${RED}x Error: Invalid channel '${CHANNEL}'. Use: main, beta, or canary${NC}"
         exit 1
     fi
 
-    local VERSION="${TAG_NAME#v}"
-    echo -e "${GREEN}* Latest version found: ${BOLD}${TAG_NAME}${NC}"
+    banner
+    divider
+    echo ""
+    if [ "$CHANNEL" = "main" ]; then
+        echo -e "${BOLD}${WHITE}Installing PalworldSaveTools${NC}"
+    else
+        echo -e "${BOLD}${WHITE}Installing PalworldSaveTools (${CYAN}${CHANNEL}${NC}${WHITE})${NC}"
+    fi
     echo ""
 
-    echo -e "${YELLOW}> Step 1/4: Downloading source code...${NC}"
-    local DOWNLOAD_URL="https://github.com/$PST_REPO/archive/refs/tags/$TAG_NAME.zip"
-    local OUTPUT_FILENAME="/tmp/PalworldSaveTools-$VERSION.zip"
+    local TAG_NAME=""
+    local VERSION=""
+    local DOWNLOAD_URL=""
+    local OUTPUT_FILENAME=""
+    local EXTRACTED_DIR_NAME=""
 
+    if [ "$CHANNEL" = "main" ]; then
+        echo -e "${YELLOW}> Fetching latest release info...${NC}"
+        TAG_NAME=$(get_latest_pst_tag)
+        if [ -z "$TAG_NAME" ]; then
+            echo ""
+            echo -e "${RED}x Error: Failed to find the latest non-beta release.${NC}"
+            echo -e "${RED}  Check your internet connection.${NC}"
+            exit 1
+        fi
+        VERSION="${TAG_NAME#v}"
+        echo -e "${GREEN}* Latest version found: ${BOLD}${TAG_NAME}${NC}"
+        echo ""
+        DOWNLOAD_URL="https://github.com/$PST_REPO/archive/refs/tags/$TAG_NAME.zip"
+        OUTPUT_FILENAME="/tmp/PalworldSaveTools-$VERSION.zip"
+        EXTRACTED_DIR_NAME="PalworldSaveTools-$VERSION"
+    else
+        echo -e "${YELLOW}> Fetching ${CHANNEL} branch...${NC}"
+        DOWNLOAD_URL="https://github.com/$PST_REPO/archive/refs/heads/$CHANNEL.zip"
+        OUTPUT_FILENAME="/tmp/PalworldSaveTools-$CHANNEL.zip"
+        EXTRACTED_DIR_NAME="PalworldSaveTools-$CHANNEL"
+        echo -e "${GREEN}* Branch: ${BOLD}${CHANNEL}${NC}"
+        echo ""
+    fi
+
+    echo -e "${YELLOW}> Step 1/4: Downloading source code...${NC}"
     echo -e "${CYAN}  URL: ${WHITE}$DOWNLOAD_URL${NC}"
     curl -L -# -o "$OUTPUT_FILENAME" "$DOWNLOAD_URL" 2>/dev/null
     echo ""
@@ -213,9 +236,8 @@ do_install() {
     if command -v unzip >/dev/null 2>&1; then
         echo -e "${CYAN}  Extracting to: ${WHITE}$PST_DATA_DIR/source${NC}"
         unzip -o -q "$OUTPUT_FILENAME" -d "$PST_DATA_DIR" >/dev/null 2>&1
-        local EXTRACTED_DIR="$PST_DATA_DIR/PalworldSaveTools-$VERSION"
-        if [ -d "$EXTRACTED_DIR" ]; then
-            mv "$EXTRACTED_DIR" "$PST_DATA_DIR/source"
+        if [ -d "$PST_DATA_DIR/$EXTRACTED_DIR_NAME" ]; then
+            mv "$PST_DATA_DIR/$EXTRACTED_DIR_NAME" "$PST_DATA_DIR/source"
         else
             echo -e "${RED}x Error: Failed to find extracted directory.${NC}"
             exit 1
@@ -233,6 +255,7 @@ do_install() {
     echo ""
 
     echo -e "${YELLOW}> Step 4/4: Finalizing...${NC}"
+    echo "$CHANNEL" > "$PST_DATA_DIR/channel"
     ensure_uv
     if [ $? -ne 0 ]; then
         exit 1
@@ -256,8 +279,6 @@ do_upgrade() {
     banner
     divider
     echo ""
-    echo -e "${BOLD}${WHITE}Upgrading PalworldSaveTools${NC}"
-    echo ""
 
     if [ ! -d "$PST_DATA_DIR/source" ]; then
         echo -e "${RED}x Error: PalworldSaveTools is not installed.${NC}"
@@ -265,24 +286,51 @@ do_upgrade() {
         exit 1
     fi
 
-    echo -e "${YELLOW}> Fetching latest release info...${NC}"
-    local TAG_NAME
-    TAG_NAME=$(get_latest_pst_tag)
-
-    if [ -z "$TAG_NAME" ]; then
-        echo ""
-        echo -e "${RED}x Error: Failed to find the latest non-beta release.${NC}"
-        exit 1
+    local CHANNEL="main"
+    if [ -f "$PST_DATA_DIR/channel" ]; then
+        CHANNEL=$(cat "$PST_DATA_DIR/channel")
     fi
 
-    local VERSION="${TAG_NAME#v}"
-    echo -e "${GREEN}* Latest version found: ${BOLD}${TAG_NAME}${NC}"
+    if [ "$CHANNEL" = "main" ]; then
+        echo -e "${BOLD}${WHITE}Upgrading PalworldSaveTools${NC}"
+    else
+        echo -e "${BOLD}${WHITE}Upgrading PalworldSaveTools (${CYAN}${CHANNEL}${NC}${WHITE})${NC}"
+    fi
     echo ""
 
-    echo -e "${YELLOW}> Step 1/4: Downloading source code...${NC}"
-    local DOWNLOAD_URL="https://github.com/$PST_REPO/archive/refs/tags/$TAG_NAME.zip"
-    local OUTPUT_FILENAME="/tmp/PalworldSaveTools-$VERSION.zip"
+    local TAG_NAME=""
+    local VERSION=""
+    local DOWNLOAD_URL=""
+    local OUTPUT_FILENAME=""
+    local EXTRACTED_DIR_NAME=""
+    local UPGRADE_LABEL=""
 
+    if [ "$CHANNEL" = "main" ]; then
+        echo -e "${YELLOW}> Fetching latest release info...${NC}"
+        TAG_NAME=$(get_latest_pst_tag)
+        if [ -z "$TAG_NAME" ]; then
+            echo ""
+            echo -e "${RED}x Error: Failed to find the latest non-beta release.${NC}"
+            exit 1
+        fi
+        VERSION="${TAG_NAME#v}"
+        echo -e "${GREEN}* Latest version found: ${BOLD}${TAG_NAME}${NC}"
+        echo ""
+        DOWNLOAD_URL="https://github.com/$PST_REPO/archive/refs/tags/$TAG_NAME.zip"
+        OUTPUT_FILENAME="/tmp/PalworldSaveTools-$VERSION.zip"
+        EXTRACTED_DIR_NAME="PalworldSaveTools-$VERSION"
+        UPGRADE_LABEL="$TAG_NAME"
+    else
+        echo -e "${YELLOW}> Fetching ${CHANNEL} branch...${NC}"
+        DOWNLOAD_URL="https://github.com/$PST_REPO/archive/refs/heads/$CHANNEL.zip"
+        OUTPUT_FILENAME="/tmp/PalworldSaveTools-$CHANNEL.zip"
+        EXTRACTED_DIR_NAME="PalworldSaveTools-$CHANNEL"
+        UPGRADE_LABEL="$CHANNEL"
+        echo -e "${GREEN}* Branch: ${BOLD}${CHANNEL}${NC}"
+        echo ""
+    fi
+
+    echo -e "${YELLOW}> Step 1/4: Downloading source code...${NC}"
     echo -e "${CYAN}  URL: ${WHITE}$DOWNLOAD_URL${NC}"
     curl -L -# -o "$OUTPUT_FILENAME" "$DOWNLOAD_URL" 2>/dev/null
     echo ""
@@ -303,9 +351,8 @@ do_upgrade() {
     if command -v unzip >/dev/null 2>&1; then
         echo -e "${CYAN}  Extracting to: ${WHITE}$PST_DATA_DIR/source${NC}"
         unzip -o -q "$OUTPUT_FILENAME" -d "$PST_DATA_DIR" >/dev/null 2>&1
-        local EXTRACTED_DIR="$PST_DATA_DIR/PalworldSaveTools-$VERSION"
-        if [ -d "$EXTRACTED_DIR" ]; then
-            mv "$EXTRACTED_DIR" "$PST_DATA_DIR/source"
+        if [ -d "$PST_DATA_DIR/$EXTRACTED_DIR_NAME" ]; then
+            mv "$PST_DATA_DIR/$EXTRACTED_DIR_NAME" "$PST_DATA_DIR/source"
         else
             echo -e "${RED}x Error: Failed to find extracted directory.${NC}"
             exit 1
@@ -329,7 +376,7 @@ do_upgrade() {
 
     divider
     echo ""
-    echo -e "${BOLD}${GREEN}Upgrade Complete!${NC} ${WHITE}(${TAG_NAME})${NC}"
+    echo -e "${BOLD}${GREEN}Upgrade Complete!${NC} ${WHITE}(${UPGRADE_LABEL})${NC}"
     echo ""
 }
 
@@ -440,7 +487,7 @@ case "${1:-}" in
         show_help
         ;;
     -i|-install)
-        do_install
+        do_install "${2:-}"
         ;;
     -u|-upgrade)
         do_upgrade

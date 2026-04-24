@@ -41,9 +41,9 @@ function Show-Help {
     Write-Host ""
     Write-Host -ForegroundColor Green "  -h" -NoNewline; Write-Host -ForegroundColor Green ", -help" -NoNewline; Write-Host "            Show this help message"
     Write-Host -ForegroundColor Green "  -v" -NoNewline; Write-Host -ForegroundColor Green ", -version" -NoNewline; Write-Host "         Show pstm and remote PST version"
-    Write-Host -ForegroundColor Green "  -i" -NoNewline; Write-Host -ForegroundColor Green ", -install" -NoNewline; Write-Host "          Download and install PalworldSaveTools"
+    Write-Host -ForegroundColor Green "  -i" -NoNewline; Write-Host -ForegroundColor Green ", -install" -NoNewline; Write-Host " [channel]  Download and install PalworldSaveTools (main|beta|canary)"
     Write-Host -ForegroundColor Green "  run" -NoNewline; Write-Host "                Run PalworldSaveTools"
-    Write-Host -ForegroundColor Green "  -u" -NoNewline; Write-Host -ForegroundColor Green ", -upgrade" -NoNewline; Write-Host "          Update PalworldSaveTools to the latest version"
+    Write-Host -ForegroundColor Green "  -u" -NoNewline; Write-Host -ForegroundColor Green ", -upgrade" -NoNewline; Write-Host "          Update PalworldSaveTools (uses installed channel)"
     Write-Host -ForegroundColor Green "  -update-self" -NoNewline; Write-Host "          Update pstm to the latest version"
     Write-Host -ForegroundColor Green "  -g" -NoNewline; Write-Host -ForegroundColor Green ", -github" -NoNewline; Write-Host "          Open PalworldSaveTools GitHub page"
     Write-Host -ForegroundColor Green "  -uninstall" -NoNewline; Write-Host "            Uninstall PalworldSaveTools"
@@ -153,30 +153,58 @@ uv run ./start.py `$args
 }
 
 function Install-PST {
-    Show-Banner
-    Show-Divider
-    Write-Host ""
-    Write-Host -ForegroundColor White "Installing PalworldSaveTools"
-    Write-Host ""
+    param([string]$Channel = "main")
 
-    Write-Host -ForegroundColor Yellow "> Fetching latest release info..."
-    Write-Host ""
-
-    $tagName = Get-LatestPstTag
-    if (-not $tagName) {
-        Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Failed to find the latest non-beta release."
-        Write-Host -ForegroundColor Red "  Check your internet connection."
+    if ($Channel -notin @("main", "beta", "canary")) {
+        Write-Host -ForegroundColor Red "x Error: Invalid channel '$Channel'. Use: main, beta, or canary"
         exit 1
     }
 
-    $version = $tagName.TrimStart('v')
-    Write-Host -ForegroundColor Green "* Latest version found:" -NoNewline
-    Write-Host -ForegroundColor White " $tagName"
+    Show-Banner
+    Show-Divider
+    Write-Host ""
+    if ($Channel -eq "main") {
+        Write-Host -ForegroundColor White "Installing PalworldSaveTools"
+    } else {
+        Write-Host -ForegroundColor White "Installing PalworldSaveTools ($Channel)"
+    }
     Write-Host ""
 
-    $downloadUrl = "https://github.com/$PST_REPO/archive/refs/tags/$tagName.zip"
-    $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
+    $tagName = ""
+    $version = ""
+    $downloadUrl = ""
+    $outputFilename = ""
+    $extractedDirName = ""
+
+    if ($Channel -eq "main") {
+        Write-Host -ForegroundColor Yellow "> Fetching latest release info..."
+        Write-Host ""
+
+        $tagName = Get-LatestPstTag
+        if (-not $tagName) {
+            Write-Host ""
+            Write-Host -ForegroundColor Red "x Error: Failed to find the latest non-beta release."
+            Write-Host -ForegroundColor Red "  Check your internet connection."
+            exit 1
+        }
+
+        $version = $tagName.TrimStart('v')
+        Write-Host -ForegroundColor Green "* Latest version found:" -NoNewline
+        Write-Host -ForegroundColor White " $tagName"
+        Write-Host ""
+
+        $downloadUrl = "https://github.com/$PST_REPO/archive/refs/tags/$tagName.zip"
+        $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
+        $extractedDirName = "PalworldSaveTools-$version"
+    } else {
+        Write-Host -ForegroundColor Yellow "> Fetching $Channel branch..."
+        $downloadUrl = "https://github.com/$PST_REPO/archive/refs/heads/$Channel.zip"
+        $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$Channel.zip"
+        $extractedDirName = "PalworldSaveTools-$Channel"
+        Write-Host -ForegroundColor Green "* Branch:" -NoNewline
+        Write-Host -ForegroundColor White " $Channel"
+        Write-Host ""
+    }
 
     Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading source code..."
     Write-Host -ForegroundColor Cyan "  URL: " -NoNewline
@@ -213,11 +241,11 @@ function Install-PST {
     New-Item -ItemType Directory -Path $PST_DATA_DIR -Force | Out-Null
 
     try {
-        $extractTmp = Join-Path $env:TEMP "PST_extract_$version"
+        $extractTmp = Join-Path $env:TEMP "PST_extract"
         if (Test-Path $extractTmp) { Remove-Item $extractTmp -Recurse -Force }
         Expand-Archive -Path $outputFilename -DestinationPath $extractTmp -Force
 
-        $extractedDir = Join-Path $extractTmp "PalworldSaveTools-$version"
+        $extractedDir = Join-Path $extractTmp $extractedDirName
         if (Test-Path $extractedDir) {
             Move-Item -Path $extractedDir -Destination (Join-Path $PST_DATA_DIR "source") -Force
         } else {
@@ -247,6 +275,7 @@ function Install-PST {
 
     Write-Host -ForegroundColor Yellow "> Step 4/4: Finalizing..."
     Write-Host ""
+    Set-Content -Path (Join-Path $PST_DATA_DIR "channel") -Value $Channel -NoNewline
     Ensure-Uv
     New-PstLauncher
     Write-Host ""
@@ -266,8 +295,6 @@ function Upgrade-PST {
     Show-Banner
     Show-Divider
     Write-Host ""
-    Write-Host -ForegroundColor White "Upgrading PalworldSaveTools"
-    Write-Host ""
 
     if (-not (Test-Path $PST_DATA_DIR)) {
         Write-Host -ForegroundColor Red "x Error: PalworldSaveTools is not installed."
@@ -277,23 +304,56 @@ function Upgrade-PST {
         exit 1
     }
 
-    Write-Host -ForegroundColor Yellow "> Fetching latest release info..."
-    Write-Host ""
-
-    $tagName = Get-LatestPstTag
-    if (-not $tagName) {
-        Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Failed to find the latest non-beta release."
-        exit 1
+    $channel = "main"
+    $channelFile = Join-Path $PST_DATA_DIR "channel"
+    if (Test-Path $channelFile) {
+        $channel = (Get-Content $channelFile -Raw).Trim()
     }
 
-    $version = $tagName.TrimStart('v')
-    Write-Host -ForegroundColor Green "* Latest version found:" -NoNewline
-    Write-Host -ForegroundColor White " $tagName"
+    if ($channel -eq "main") {
+        Write-Host -ForegroundColor White "Upgrading PalworldSaveTools"
+    } else {
+        Write-Host -ForegroundColor White "Upgrading PalworldSaveTools ($channel)"
+    }
     Write-Host ""
 
-    $downloadUrl = "https://github.com/$PST_REPO/archive/refs/tags/$tagName.zip"
-    $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
+    $tagName = ""
+    $version = ""
+    $downloadUrl = ""
+    $outputFilename = ""
+    $extractedDirName = ""
+    $upgradeLabel = ""
+
+    if ($channel -eq "main") {
+        Write-Host -ForegroundColor Yellow "> Fetching latest release info..."
+        Write-Host ""
+
+        $tagName = Get-LatestPstTag
+        if (-not $tagName) {
+            Write-Host ""
+            Write-Host -ForegroundColor Red "x Error: Failed to find the latest non-beta release."
+            exit 1
+        }
+
+        $version = $tagName.TrimStart('v')
+        Write-Host -ForegroundColor Green "* Latest version found:" -NoNewline
+        Write-Host -ForegroundColor White " $tagName"
+        Write-Host ""
+
+        $downloadUrl = "https://github.com/$PST_REPO/archive/refs/tags/$tagName.zip"
+        $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
+        $extractedDirName = "PalworldSaveTools-$version"
+        $upgradeLabel = $tagName
+    } else {
+        Write-Host -ForegroundColor Yellow "> Fetching $channel branch..."
+        $downloadUrl = "https://github.com/$PST_REPO/archive/refs/heads/$channel.zip"
+        $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$channel.zip"
+        $extractedDirName = "PalworldSaveTools-$channel"
+        $upgradeLabel = $channel
+        Write-Host -ForegroundColor Green "* Branch:" -NoNewline
+        Write-Host -ForegroundColor White " $channel"
+        Write-Host ""
+    }
 
     Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading source code..."
     Write-Host -ForegroundColor Cyan "  URL: " -NoNewline
@@ -328,11 +388,11 @@ function Upgrade-PST {
     New-Item -ItemType Directory -Path $PST_DATA_DIR -Force | Out-Null
 
     try {
-        $extractTmp = Join-Path $env:TEMP "PST_extract_$version"
+        $extractTmp = Join-Path $env:TEMP "PST_extract"
         if (Test-Path $extractTmp) { Remove-Item $extractTmp -Recurse -Force }
         Expand-Archive -Path $outputFilename -DestinationPath $extractTmp -Force
 
-        $extractedDir = Join-Path $extractTmp "PalworldSaveTools-$version"
+        $extractedDir = Join-Path $extractTmp $extractedDirName
         if (Test-Path $extractedDir) {
             Move-Item -Path $extractedDir -Destination (Join-Path $PST_DATA_DIR "source") -Force
         } else {
@@ -362,6 +422,7 @@ function Upgrade-PST {
 
     Write-Host -ForegroundColor Yellow "> Step 4/4: Finalizing..."
     Write-Host ""
+    Set-Content -Path (Join-Path $PST_DATA_DIR "channel") -Value $channel -NoNewline
     Ensure-Uv
     New-PstLauncher
     Write-Host ""
@@ -369,7 +430,7 @@ function Upgrade-PST {
     Show-Divider
     Write-Host ""
     Write-Host -ForegroundColor Green -NoNewline "Upgrade Complete!"
-    Write-Host -ForegroundColor White " ($tagName)"
+    Write-Host -ForegroundColor White " ($upgradeLabel)"
     Write-Host ""
 }
 
@@ -490,10 +551,11 @@ if ($remoteVer) {
 }
 
 $command = if ($args.Count -gt 0) { $args[0] } else { "" }
+$channelArg = if ($args.Count -gt 1) { $args[1] } else { "" }
 
 switch ($command) {
     { $_ -in "-h", "--help", "" } { Show-Help }
-    { $_ -in "-i", "-install" } { Install-PST }
+    { $_ -in "-i", "-install" } { Install-PST -Channel $channelArg }
     { $_ -in "-u", "-upgrade" } { Upgrade-PST }
     { $_ -in "-v", "-version" } { Show-Version }
     { $_ -in "-g", "-github" } { Open-GitHub }
