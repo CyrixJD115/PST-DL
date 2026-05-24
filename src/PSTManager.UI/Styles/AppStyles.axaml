@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Color Palette -->
+    <Color x:Key="PrimaryBlue">#3B82F6</Color>
+    <Color x:Key="PrimaryBlueLight">#60A5FA</Color>
+    <Color x:Key="PrimaryTeal">#14B8A6</Color>
+    <Color x:Key="PrimaryTealLight">#5EEAD4</Color>
+    <Color x:Key="SurfaceBackground">#0F1015</Color>
+    <Color x:Key="SurfaceCard">#1A1B23</Color>
+    <Color x:Key="SurfaceElevated">#252630</Color>
+    <Color x:Key="TextPrimary">#F1F5F9</Color>
+    <Color x:Key="TextSecondary">#94A3B8</Color>
+    <Color x:Key="TextMuted">#64748B</Color>
+    <Color x:Key="BorderColor">#2D2E3A</Color>
+    <Color x:Key="DestructiveRed">#EF4444</Color>
+    <Color x:Key="SuccessGreen">#22C55E</Color>
+    <Color x:Key="WarningYellow">#EAB308</Color>
+
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="PrimaryBlueBrush" Color="{StaticResource PrimaryBlue}" />
+    <SolidColorBrush x:Key="PrimaryTealBrush" Color="{StaticResource PrimaryTeal}" />
+    <SolidColorBrush x:Key="SurfaceBackgroundBrush" Color="{StaticResource SurfaceBackground}" />
+    <SolidColorBrush x:Key="SurfaceCardBrush" Color="{StaticResource SurfaceCard}" />
+    <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="{StaticResource SurfaceElevated}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="SuccessGreenBrush" Color="{StaticResource SuccessGreen}" />
+    <SolidColorBrush x:Key="DestructiveRedBrush" Color="{StaticResource DestructiveRed}" />
+
+</ResourceDictionary>

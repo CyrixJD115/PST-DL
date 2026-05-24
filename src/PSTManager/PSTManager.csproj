@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PSTManager</RootNamespace>
+    <ApplicationIcon>../../pstm.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PSTManager.Core\PSTManager.Core.csproj" />
+    <ProjectReference Include="..\PSTManager.UI\PSTManager.UI.csproj" />
+    <ProjectReference Include="..\PSTManager.Dis\PSTManager.Dis.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="../../assets/**/*" Link="assets/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

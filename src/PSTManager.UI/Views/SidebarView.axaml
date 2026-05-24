@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PSTManager.UI.Converters"
+             x:Class="PSTManager.UI.Views.SidebarView">
+
+    <UserControl.Resources>
+        <converters:BranchToColorConverter x:Key="BranchToColorConverter" />
+        <converters:EnumToBoolConverter x:Key="EnumToBoolConverter" />
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource SurfaceCardBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,0,1,0"
+            Padding="16,14">
+
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
+
+            <!-- Version Badge -->
+            <Border Grid.Row="0"
+                    Background="{StaticResource SurfaceElevatedBrush}"
+                    CornerRadius="10"
+                    BorderThickness="1"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    Padding="12,10"
+                    Margin="0,0,0,14">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="INSTALLED VERSION"
+                               Classes="caption" />
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="6"
+                                VerticalAlignment="Center">
+                        <Ellipse Width="8"
+                                 Height="8"
+                                 Fill="{Binding InstalledBranch, Converter={StaticResource BranchToColorConverter}}" />
+                        <TextBlock Text="{Binding InstalledVersionText}"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding InstalledBranchText}"
+                               Classes="caption"
+                               IsVisible="{Binding IsInstalled}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Branch Switcher -->
+            <StackPanel Grid.Row="1" Spacing="6" Margin="0,0,0,14">
+                <TextBlock Text="BRANCH"
+                           Classes="caption" />
+                <Border Background="{StaticResource SurfaceElevatedBrush}"
+                        CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        Padding="4">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="4">
+                        <RadioButton Content="Stable"
+                                     IsChecked="{Binding SelectedBranch, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Stable, Mode=TwoWay}"
+                                     Padding="14,7"
+                                     CornerRadius="6"
+                                     FontSize="12"
+                                     FontWeight="Medium"
+                                     Cursor="Hand"
+                                     Background="Transparent"
+                                     Foreground="{StaticResource TextSecondaryBrush}" />
+                        <RadioButton Content="Beta"
+                                     IsChecked="{Binding SelectedBranch, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Beta, Mode=TwoWay}"
+                                     Padding="14,7"
+                                     CornerRadius="6"
+                                     FontSize="12"
+                                     FontWeight="Medium"
+                                     Cursor="Hand"
+                                     Background="Transparent"
+                                     Foreground="{StaticResource TextSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Local Version -->
+            <Border Grid.Row="2"
+                    Background="{StaticResource SurfaceElevatedBrush}"
+                    CornerRadius="10"
+                    BorderThickness="1"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    Padding="12,8"
+                    Margin="0,0,0,14">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="PST MANAGER VERSION"
+                               Classes="caption" />
+                    <TextBlock Text="{Binding LocalVersion}"
+                               FontSize="12"
+                               Foreground="{StaticResource TextPrimaryBrush}" />
+                    <TextBlock Text="{Binding LatestStableVersion, StringFormat=Latest PST: v{0}}"
+                               Classes="caption" />
+                </StackPanel>
+            </Border>
+
+            <!-- Spacer -->
+            <Rectangle Grid.Row="3" />
+
+            <!-- GitHub Button -->
+            <Button Grid.Row="4"
+                    Command="{Binding OpenGitHubCommand}"
+                    Classes="ghost"
+                    Margin="0,0,0,6"
+                    Padding="12,8">
+                <TextBlock Text="GitHub Repository" FontSize="12" />
+            </Button>
+
+            <!-- About -->
+            <TextBlock Grid.Row="5"
+                       Text="Palworld Save Tools Manager"
+                       Classes="caption"
+                       TextWrapping="Wrap"
+                       LineHeight="14" />
+
+        </Grid>
+    </Border>
+</UserControl>

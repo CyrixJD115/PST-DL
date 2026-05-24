@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PSTManager.UI.ViewModels"
+        xmlns:views="clr-namespace:PSTManager.UI.Views"
+        x:Class="PSTManager.UI.Views.MainWindow"
+        Title="PST Manager"
+        Width="860"
+        Height="580"
+        MinWidth="720"
+        MinHeight="480"
+        SystemDecorations="None"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        Background="{StaticResource SurfaceBackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}">
+
+    <Border CornerRadius="12"
+            BoxShadow="0 8 32 #66000000"
+            Background="{StaticResource SurfaceBackgroundBrush}"
+            Margin="1"
+            PointerPressed="OnPointerPressed">
+        <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+            <!-- Header (draggable) -->
+            <views:HeaderView DataContext="{Binding Header}"
+                              Grid.Row="0" />
+
+            <!-- Main content area: Sidebar + Center -->
+            <Grid Grid.Row="1" ColumnDefinitions="240,*">
+
+                <!-- Sidebar -->
+                <views:SidebarView DataContext="{Binding Sidebar}"
+                                   Grid.Column="0" />
+
+                <!-- Center content -->
+                <Grid Grid.Column="1">
+                    <views:ContentView DataContext="{Binding Content}" />
+                </Grid>
+
+            </Grid>
+
+            <!-- Download progress bar -->
+            <views:DownloadProgressView DataContext="{Binding DownloadProgress}"
+                                        Grid.Row="2" />
+
+            <!-- Footer -->
+            <views:FooterView DataContext="{Binding Footer}"
+                              Grid.Row="3" />
+
+        </Grid>
+    </Border>
+</Window>

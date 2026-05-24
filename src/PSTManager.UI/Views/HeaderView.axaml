@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PSTManager.UI.Views.HeaderView"
+             Height="48">
+
+    <Border Background="{StaticResource SurfaceCardBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,0,0,1">
+
+        <Grid ColumnDefinitions="Auto,*">
+
+            <Image Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   Source="avares://PSTManager/assets/logo.png"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Height="28"
+                   Stretch="Uniform"
+                   IsHitTestVisible="False" />
+
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Stretch">
+
+                <Button Command="{Binding MinimizeCommand}"
+                        Classes="window-button"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center">
+                    <TextBlock Text="&#x2014;"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Button>
+
+                <Button Command="{Binding CloseCommand}"
+                        Classes="window-button close"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center">
+                    <TextBlock Text="&#x2715;"
+                               FontSize="12"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Button>
+            </StackPanel>
+
+        </Grid>
+    </Border>
+</UserControl>

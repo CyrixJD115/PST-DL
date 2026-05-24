@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PSTManager.UI.Views.DownloadProgressView"
+             Height="48"
+             IsVisible="{Binding IsVisible}">
+
+    <Border Background="{StaticResource SurfaceElevatedBrush}"
+            Padding="20,8">
+
+        <StackPanel Spacing="4"
+                    VerticalAlignment="Center">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Progress, StringFormat={}{0:F0}%}"
+                           FontSize="12"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           VerticalAlignment="Center" />
+            </Grid>
+            <ProgressBar Value="{Binding Progress}"
+                         Minimum="0"
+                         Maximum="100"
+                         IsIndeterminate="{Binding IsIndeterminate}" />
+        </StackPanel>
+    </Border>
+</UserControl>

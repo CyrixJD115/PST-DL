@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PSTManager.UI.Views.FooterView"
+             Height="56">
+
+    <Border Background="{StaticResource SurfaceCardBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="20,0">
+
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+
+            <Button Grid.Column="0"
+                    Command="{Binding OpenFolderCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Classes="ghost"
+                    VerticalAlignment="Center"
+                    Padding="16,10">
+                <TextBlock Text="Open Folder" FontSize="13" />
+            </Button>
+
+            <Button Grid.Column="2"
+                    Command="{Binding PrimaryActionCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Classes="primary"
+                    VerticalAlignment="Center">
+                <TextBlock Text="{Binding PrimaryActionLabel}" FontSize="13" FontWeight="SemiBold" />
+            </Button>
+
+            <Button Grid.Column="3"
+                    Command="{Binding LaunchCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Classes="teal"
+                    VerticalAlignment="Center"
+                    Margin="10,0,0,0"
+                    IsVisible="{Binding ShowLaunchButton}">
+                <TextBlock Text="Launch PST" FontSize="13" FontWeight="SemiBold" />
+            </Button>
+
+        </Grid>
+    </Border>
+</UserControl>

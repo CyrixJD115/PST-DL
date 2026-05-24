@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PSTManager.UI.ViewModels"
+             xmlns:converters="clr-namespace:PSTManager.UI.Converters"
+             x:Class="PSTManager.UI.Views.ContentView">
+
+    <UserControl.Resources>
+        <converters:AppStateToVisibilityConverter x:Key="AppStateToVisibility" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Image Source="avares://PSTManager/assets/background.png"
+               Opacity="0.35"
+               Stretch="UniformToFill"
+               IsVisible="{Binding IsBackgroundVisible}" />
+
+        <Border VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,40"
+                Padding="32,24"
+                Background="#CC1A1B23"
+                CornerRadius="12"
+                BorderThickness="1"
+                BorderBrush="{StaticResource BorderBrush}"
+                MaxWidth="400">
+
+            <Grid>
+                <!-- Idle state -->
+                <StackPanel Spacing="16"
+                            IsVisible="{Binding CurrentState, Converter={StaticResource AppStateToVisibility}, ConverterParameter=Idle}">
+                    <TextBlock Text="Get Started"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Classes="subheader"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+                </StackPanel>
+
+                <!-- Installed state -->
+                <StackPanel Spacing="12"
+                            IsVisible="{Binding CurrentState, Converter={StaticResource AppStateToVisibility}, ConverterParameter=Installed}">
+                    <TextBlock Text="Ready to Go"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Classes="subheader"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+                </StackPanel>
+
+                <!-- Downloading state -->
+                <StackPanel Spacing="12"
+                            IsVisible="{Binding CurrentState, Converter={StaticResource AppStateToVisibility}, ConverterParameter=Downloading}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="15"
+                               FontWeight="Medium"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Error state -->
+                <StackPanel Spacing="10"
+                            IsVisible="{Binding CurrentState, Converter={StaticResource AppStateToVisibility}, ConverterParameter=Error}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource DestructiveRedBrush}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Classes="subheader"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+                </StackPanel>
+
+                <!-- Launching state -->
+                <StackPanel Spacing="12"
+                            IsVisible="{Binding CurrentState, Converter={StaticResource AppStateToVisibility}, ConverterParameter=Launching}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryTealBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Confirm switch state -->
+                <StackPanel Spacing="12"
+                            IsVisible="{Binding CurrentState, Converter={StaticResource AppStateToVisibility}, ConverterParameter=ConfirmSwitch}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="14"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="10">
+                        <Button Content="Confirm"
+                                Command="{Binding ConfirmSwitchCommand}"
+                                Classes="primary"
+                                Padding="24,10" />
+                        <Button Content="Cancel"
+                                Command="{Binding CancelSwitchCommand}"
+                                Classes="ghost"
+                                Padding="24,10" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+        </Border>
+    </Grid>
+</UserControl>
