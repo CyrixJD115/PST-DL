@@ -2,6 +2,8 @@
 
 A CLI version manager for [PalworldSaveTools](https://github.com/deafdudecomputers/PalworldSaveTools). Download, install, upgrade, and manage PalworldSaveTools from your terminal.
 
+> **Windows support coming soon.**
+
 ## Quick Install
 
 ```bash
