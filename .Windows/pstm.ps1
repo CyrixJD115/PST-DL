@@ -10,46 +10,31 @@ $PST_DATA_DIR = Join-Path $env:LOCALAPPDATA "palworldsavetools"
 $PSTM_DIR = Join-Path $env:LOCALAPPDATA "pstm"
 $PSTM_SCRIPT = Join-Path $PSTM_DIR "pstm.ps1"
 
-function Show-Banner {
-    Write-Host ""
-    Write-Host -ForegroundColor White @"
-██████╗ ███████╗████████╗███╗   ███╗
-██╔══██╗██╔════╝╚══██╔══╝████╗ ████║
-██████╔╝███████╗   ██║   ██╔████╔██║
-██╔═══╝ ╚════██║   ██║   ██║╚██╔╝██║
-██║     ███████║   ██║   ██║ ╚═╝ ██║
-╚═╝     ╚══════╝   ╚═╝   ╚═╝     ╚═╝
-"@
-    Write-Host ""
-}
 
-function Show-Divider {
-    Write-Host -ForegroundColor White "════════════════════════════════════════════════════════"
-}
 
 function Show-Help {
-    Show-Banner
-    Write-Host -ForegroundColor White "pstm v${PSTM_VERSION}" -NoNewline
+
+    Write-Host "pstm v${PSTM_VERSION}" -NoNewline
     Write-Host " - PST Manager"
     Write-Host ""
-    Show-Divider
+
     Write-Host ""
-    Write-Host -ForegroundColor White "Usage:"
+    Write-Host "Usage:"
     Write-Host "  pstm [command]"
     Write-Host ""
-    Write-Host -ForegroundColor White "Commands:"
+    Write-Host "Commands:"
     Write-Host ""
-    Write-Host -ForegroundColor Green "  -h" -NoNewline; Write-Host -ForegroundColor Green ", -help" -NoNewline; Write-Host "            Show this help message"
-    Write-Host -ForegroundColor Green "  -v" -NoNewline; Write-Host -ForegroundColor Green ", -version" -NoNewline; Write-Host "         Show pstm and remote PST version"
-    Write-Host -ForegroundColor Green "  -i" -NoNewline; Write-Host -ForegroundColor Green ", -install" -NoNewline; Write-Host "        Download and install the latest PalworldSaveTools"
-    Write-Host -ForegroundColor Green "  run" -NoNewline; Write-Host "                Run PalworldSaveTools"
-    Write-Host -ForegroundColor Green "  -u" -NoNewline; Write-Host -ForegroundColor Green ", -upgrade" -NoNewline; Write-Host "          Update PalworldSaveTools to the latest version"
-    Write-Host -ForegroundColor Green "  -update-self" -NoNewline; Write-Host "          Update pstm to the latest version"
-    Write-Host -ForegroundColor Green "  -g" -NoNewline; Write-Host -ForegroundColor Green ", -github" -NoNewline; Write-Host "          Open PalworldSaveTools GitHub page"
-    Write-Host -ForegroundColor Green "  -uninstall" -NoNewline; Write-Host "            Uninstall PalworldSaveTools"
-    Write-Host -ForegroundColor Green "  -uninstall-all" -NoNewline; Write-Host "        Uninstall pstm and PalworldSaveTools"
+    Write-Host "  -h" -NoNewline; Write-Host ", -help" -NoNewline; Write-Host "            Show this help message"
+    Write-Host "  -v" -NoNewline; Write-Host ", -version" -NoNewline; Write-Host "         Show pstm and remote PST version"
+    Write-Host "  -i" -NoNewline; Write-Host ", -install" -NoNewline; Write-Host "        Download and install the latest PalworldSaveTools"
+    Write-Host "  run" -NoNewline; Write-Host "                Run PalworldSaveTools"
+    Write-Host "  -u" -NoNewline; Write-Host ", -upgrade" -NoNewline; Write-Host "          Update PalworldSaveTools to the latest version"
+    Write-Host "  -update-self" -NoNewline; Write-Host "          Update pstm to the latest version"
+    Write-Host "  -g" -NoNewline; Write-Host ", -github" -NoNewline; Write-Host "          Open PalworldSaveTools GitHub page"
+    Write-Host "  -uninstall" -NoNewline; Write-Host "            Uninstall PalworldSaveTools"
+    Write-Host "  -uninstall-all" -NoNewline; Write-Host "        Uninstall pstm and PalworldSaveTools"
     Write-Host ""
-    Show-Divider
+
     Write-Host ""
 }
 
@@ -96,16 +81,16 @@ function Ensure-Uv {
         return
     } catch {}
 
-    Write-Host -ForegroundColor Yellow "> uv not found. Installing uv..."
+    Write-Host "> uv not found. Installing uv..."
     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
     $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
 
     try {
         uv --version | Out-Null
-        Write-Host -ForegroundColor Green "* uv installed successfully!"
+        Write-Host "* uv installed successfully!"
     } catch {
-        Write-Host -ForegroundColor Red "x Error: Failed to install uv."
+        Write-Host "x Error: Failed to install uv."
         throw "uv install failed"
     }
 }
@@ -122,16 +107,16 @@ uv python install 3.13
 uv run ./start.py `$args
 "@
     Set-Content -Path $pstPs1 -Value $content -Force
-    Write-Host -ForegroundColor Green "* Launcher generated: " -NoNewline
-    Write-Host -ForegroundColor Cyan $pstPs1
+    Write-Host "* Launcher generated: " -NoNewline
+    Write-Host $pstPs1
 
     try {
-        Write-Host -ForegroundColor Yellow "> Downloading icon..."
+        Write-Host "> Downloading icon..."
         Invoke-WebRequest -Uri "${PSTM_RAW_BASE}/pstm.ico" -OutFile $icoPath -UseBasicParsing
-        Write-Host -ForegroundColor Green "* Icon downloaded: " -NoNewline
-        Write-Host -ForegroundColor Cyan $icoPath
+        Write-Host "* Icon downloaded: " -NoNewline
+        Write-Host $icoPath
     } catch {
-        Write-Host -ForegroundColor Yellow "! Warning: Failed to download icon."
+        Write-Host "! Warning: Failed to download icon."
     }
 
     $WshShell = New-Object -ComObject WScript.Shell
@@ -143,8 +128,8 @@ uv run ./start.py `$args
         $Shortcut.IconLocation = $icoPath
     }
     $Shortcut.Save()
-    Write-Host -ForegroundColor Green "* Desktop shortcut created: " -NoNewline
-    Write-Host -ForegroundColor Cyan $shortcutPath
+    Write-Host "* Desktop shortcut created: " -NoNewline
+    Write-Host $shortcutPath
 }
 
 function Install-PstVersion {
@@ -155,37 +140,36 @@ function Install-PstVersion {
     $outputFilename = Join-Path $env:TEMP "PalworldSaveTools-$version.zip"
     $extractedDirName = "PalworldSaveTools-$version"
 
-    Write-Host -ForegroundColor Green "* Latest version found:" -NoNewline
-    Write-Host -ForegroundColor White " $TagName"
+    Write-Host "* Latest version found:" -NoNewline
+    Write-Host " $TagName"
     Write-Host ""
 
-    Write-Host -ForegroundColor Yellow "> Step 1/4: Downloading source code..."
-    Write-Host -ForegroundColor Cyan "  URL: " -NoNewline
-    Write-Host -ForegroundColor White $downloadUrl
+    Write-Host "> Step 1/4: Downloading source code..."
+    Write-Host "  URL: " -NoNewline
+    Write-Host $downloadUrl
     Write-Host ""
 
     try {
-        if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-            $null = & curl.exe -L -# -o $outputFilename $downloadUrl 2>&1
-            if ($LASTEXITCODE -ne 0) { throw "curl.exe failed (exit code: $LASTEXITCODE)" }
-        } else {
-            Invoke-WebRequest -Uri $downloadUrl -OutFile $outputFilename -UseBasicParsing
-        }
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $downloadUrl -OutFile $outputFilename -UseBasicParsing
 
         $fileSize = (Get-Item $outputFilename).Length / 1MB
         $fileSizeStr = "{0:N1} MB" -f $fileSize
-        Write-Host -ForegroundColor Green "* Download Complete! " -NoNewline
-        Write-Host -ForegroundColor White "($fileSizeStr)"
+        Write-Host "* Download Complete! " -NoNewline
+        Write-Host "($fileSizeStr)"
     } catch {
         Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Download failed. $($_.Exception.Message)"
+        Write-Host "x Error: Download failed."
+        Write-Host "  $($_.Exception.Message)"
         exit 1
+    } finally {
+        $ProgressPreference = 'Continue'
     }
     Write-Host ""
 
-    Write-Host -ForegroundColor Yellow "> Step 2/4: Extracting archive..."
-    Write-Host -ForegroundColor Cyan "  Extracting to: " -NoNewline
-    Write-Host -ForegroundColor White "$PST_DATA_DIR\source"
+    Write-Host "> Step 2/4: Extracting archive..."
+    Write-Host "  Extracting to: " -NoNewline
+    Write-Host "$PST_DATA_DIR\source"
     Write-Host ""
 
     if (Test-Path $PST_DATA_DIR) {
@@ -202,31 +186,31 @@ function Install-PstVersion {
         if (Test-Path $extractedDir) {
             Move-Item -Path $extractedDir -Destination (Join-Path $PST_DATA_DIR "source") -Force
         } else {
-            Write-Host -ForegroundColor Red "x Error: Failed to find extracted directory."
+            Write-Host "x Error: Failed to find extracted directory."
             exit 1
         }
         Remove-Item $extractTmp -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Host -ForegroundColor Green "* Extraction Complete!"
+        Write-Host "* Extraction Complete!"
     } catch {
         Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Extraction failed. $($_.Exception.Message)"
+        Write-Host "x Error: Extraction failed. $($_.Exception.Message)"
         exit 1
     }
     Write-Host ""
 
-    Write-Host -ForegroundColor Yellow "> Step 3/4: Cleaning up..."
+    Write-Host "> Step 3/4: Cleaning up..."
     Write-Host ""
 
     try {
         Remove-Item $outputFilename -Force -ErrorAction Stop
-        Write-Host -ForegroundColor Green "* Cleanup Complete!"
+        Write-Host "* Cleanup Complete!"
     } catch {
         Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Failed to delete file. $($_.Exception.Message)"
+        Write-Host "x Error: Failed to delete file. $($_.Exception.Message)"
     }
     Write-Host ""
 
-    Write-Host -ForegroundColor Yellow "> Step 4/4: Finalizing..."
+    Write-Host "> Step 4/4: Finalizing..."
     Write-Host ""
     Set-Content -Path (Join-Path $PST_DATA_DIR "version") -Value $TagName -NoNewline
     Ensure-Uv
@@ -235,59 +219,59 @@ function Install-PstVersion {
 }
 
 function Install-PST {
-    Show-Banner
-    Show-Divider
+
+
     Write-Host ""
-    Write-Host -ForegroundColor White "Installing PalworldSaveTools"
+    Write-Host "Installing PalworldSaveTools"
     Write-Host ""
 
-    Write-Host -ForegroundColor Yellow "> Fetching latest release info..."
+    Write-Host "> Fetching latest release info..."
     Write-Host ""
 
     $tagName = Get-LatestPstTag
     if (-not $tagName) {
         Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Failed to find the latest release."
-        Write-Host -ForegroundColor Red "  Check your internet connection."
+        Write-Host "x Error: Failed to find the latest release."
+        Write-Host "  Check your internet connection."
         exit 1
     }
 
     Install-PstVersion -TagName $tagName
 
-    Show-Divider
+
     Write-Host ""
-    Write-Host -ForegroundColor Green -NoNewline "Setup Complete!"
+    Write-Host -NoNewline "Setup Complete!"
     Write-Host ""
     Write-Host ""
-    Write-Host -ForegroundColor White "How to run:"
+    Write-Host "How to run:"
     Write-Host ""
-    Write-Host -ForegroundColor Cyan "  pstm run"
+    Write-Host "  pstm run"
     Write-Host ""
 }
 
 function Upgrade-PST {
-    Show-Banner
-    Show-Divider
+
+
     Write-Host ""
 
     if (-not (Test-Path $PST_DATA_DIR)) {
-        Write-Host -ForegroundColor Red "x Error: PalworldSaveTools is not installed."
-        Write-Host -ForegroundColor Yellow "  Run " -NoNewline
-        Write-Host -ForegroundColor Cyan "pstm -i" -NoNewline
-        Write-Host -ForegroundColor Yellow " to install first."
+        Write-Host "x Error: PalworldSaveTools is not installed."
+        Write-Host "  Run " -NoNewline
+        Write-Host "pstm -i" -NoNewline
+        Write-Host " to install first."
         exit 1
     }
 
-    Write-Host -ForegroundColor White "Upgrading PalworldSaveTools"
+    Write-Host "Upgrading PalworldSaveTools"
     Write-Host ""
 
-    Write-Host -ForegroundColor Yellow "> Fetching latest release info..."
+    Write-Host "> Fetching latest release info..."
     Write-Host ""
 
     $tagName = Get-LatestPstTag
     if (-not $tagName) {
         Write-Host ""
-        Write-Host -ForegroundColor Red "x Error: Failed to find the latest release."
+        Write-Host "x Error: Failed to find the latest release."
         exit 1
     }
 
@@ -298,44 +282,44 @@ function Upgrade-PST {
     }
 
     if ($installedVer -and ($installedVer -eq $tagName)) {
-        Write-Host -ForegroundColor Green "* Already up to date ($tagName)."
+        Write-Host "* Already up to date ($tagName)."
         Write-Host ""
         return
     }
 
     Install-PstVersion -TagName $tagName
 
-    Show-Divider
+
     Write-Host ""
-    Write-Host -ForegroundColor Green -NoNewline "Upgrade Complete!"
-    Write-Host -ForegroundColor White " ($tagName)"
+    Write-Host -NoNewline "Upgrade Complete!"
+    Write-Host " ($tagName)"
     Write-Host ""
 }
 
 function Uninstall-PST {
     if (-not (Test-Path $PST_DATA_DIR)) {
-        Write-Host -ForegroundColor Red "x PalworldSaveTools is not installed."
+        Write-Host "x PalworldSaveTools is not installed."
         exit 1
     }
 
-    Write-Host -ForegroundColor Yellow "> This will delete: " -NoNewline
-    Write-Host -ForegroundColor Cyan $PST_DATA_DIR
+    Write-Host "> This will delete: " -NoNewline
+    Write-Host $PST_DATA_DIR
     $confirm = Read-Host -Prompt "> Are you sure? [y/N]"
 
     if ($confirm -match '^[Yy]$') {
         $shortcutPath = Join-Path $env:USERPROFILE "Desktop\PST.lnk"
         if (Test-Path $shortcutPath) { Remove-Item $shortcutPath -Force }
         Remove-Item $PST_DATA_DIR -Recurse -Force
-        Write-Host -ForegroundColor Green "* PalworldSaveTools uninstalled successfully."
+        Write-Host "* PalworldSaveTools uninstalled successfully."
     } else {
-        Write-Host -ForegroundColor Gray "Cancelled."
+        Write-Host "Cancelled."
     }
 }
 
 function Uninstall-All {
-    Write-Host -ForegroundColor Yellow "> This will delete:"
-    Write-Host -ForegroundColor Cyan "  $PST_DATA_DIR"
-    Write-Host -ForegroundColor Cyan "  $PSTM_DIR"
+    Write-Host "> This will delete:"
+    Write-Host "  $PST_DATA_DIR"
+    Write-Host "  $PSTM_DIR"
     Write-Host ""
     $confirm = Read-Host -Prompt "> Are you sure? [y/N]"
 
@@ -350,26 +334,26 @@ function Uninstall-All {
         if ($userPath -like "*pstm*") {
             $newPath = ($userPath -split ';' | Where-Object { $_ -notlike "*pstm*" }) -join ';'
             [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
-            Write-Host -ForegroundColor Yellow "> Removed pstm from user PATH."
+            Write-Host "> Removed pstm from user PATH."
         }
 
         Write-Host ""
-        Write-Host -ForegroundColor Green "* pstm and PalworldSaveTools fully uninstalled."
+        Write-Host "* pstm and PalworldSaveTools fully uninstalled."
     } else {
-        Write-Host -ForegroundColor Gray "Cancelled."
+        Write-Host "Cancelled."
     }
 }
 
 function Show-Version {
-    Show-Banner
-    Write-Host -ForegroundColor White "pstm      v$PSTM_VERSION"
-    Write-Host -ForegroundColor White "pst remote" -NoNewline; Write-Host " querying..."
+
+    Write-Host "pstm      v$PSTM_VERSION"
+    Write-Host "pst remote" -NoNewline; Write-Host " querying..."
 
     $tagName = Get-LatestPstTag
     if ($tagName) {
-        Write-Host -ForegroundColor White "pst latest" -NoNewline; Write-Host -ForegroundColor Green " $tagName"
+        Write-Host "pst latest" -NoNewline; Write-Host " $tagName"
     } else {
-        Write-Host -ForegroundColor White "pst latest" -NoNewline; Write-Host -ForegroundColor Red " unavailable"
+        Write-Host "pst latest" -NoNewline; Write-Host " unavailable"
     }
 
     $installedVer = "not installed"
@@ -379,13 +363,13 @@ function Show-Version {
     } elseif (Test-Path $PST_DATA_DIR) {
         $installedVer = "installed"
     }
-    Write-Host -ForegroundColor White "pst local " -NoNewline; Write-Host " $installedVer"
+    Write-Host "pst local " -NoNewline; Write-Host " $installedVer"
 }
 
 function Open-GitHub {
     $url = "https://github.com/$PST_REPO"
-    Write-Host -ForegroundColor Cyan "> Opening: " -NoNewline
-    Write-Host -ForegroundColor White $url
+    Write-Host "> Opening: " -NoNewline
+    Write-Host $url
     Start-Process $url
 }
 
@@ -395,29 +379,29 @@ function Run-PST {
     if (Test-Path $pstPs1) {
         & $pstPs1 @args
     } else {
-        Write-Host -ForegroundColor Red "x Error: PalworldSaveTools is not installed."
-        Write-Host -ForegroundColor Yellow "  Run " -NoNewline
-        Write-Host -ForegroundColor Cyan "pstm -i" -NoNewline
-        Write-Host -ForegroundColor Yellow " to install first."
+        Write-Host "x Error: PalworldSaveTools is not installed."
+        Write-Host "  Run " -NoNewline
+        Write-Host "pstm -i" -NoNewline
+        Write-Host " to install first."
         exit 1
     }
 }
 
 function Update-Self {
-    Write-Host -ForegroundColor Yellow "> Checking for pstm update..."
+    Write-Host "> Checking for pstm update..."
     $tmpFile = Join-Path $env:TEMP "pstm_update.ps1"
 
     try {
         Invoke-WebRequest -Uri "${PSTM_RAW_BASE}/.Windows/pstm.ps1" -OutFile $tmpFile -UseBasicParsing
         if ((Test-Path $tmpFile) -and ((Get-Item $tmpFile).Length -gt 0)) {
             Move-Item -Path $tmpFile -Destination $PSTM_SCRIPT -Force
-            Write-Host -ForegroundColor Green "* pstm updated successfully!"
+            Write-Host "* pstm updated successfully!"
         } else {
-            Write-Host -ForegroundColor Red "x Error: Downloaded file is empty."
+            Write-Host "x Error: Downloaded file is empty."
             Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
         }
     } catch {
-        Write-Host -ForegroundColor Red "x Error: Failed to download update. $($_.Exception.Message)"
+        Write-Host "x Error: Failed to download update. $($_.Exception.Message)"
         Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
     }
 }
@@ -426,10 +410,10 @@ $remoteVer = Get-LatestPstmVersion
 if ($remoteVer) {
     $cmp = Compare-Versions -V1 $remoteVer -V2 $PSTM_VERSION
     if ($cmp -eq 1) {
-        Write-Host -ForegroundColor Yellow "> pstm update available: v$PSTM_VERSION -> v$remoteVer (auto-updating...)"
+        Write-Host "> pstm update available: v$PSTM_VERSION -> v$remoteVer (auto-updating...)"
         Update-Self
     } elseif ($cmp -eq -1) {
-        Write-Host -ForegroundColor Yellow "Warning: local version (v$PSTM_VERSION) is ahead of remote (v$remoteVer). Skipping update."
+        Write-Host "Warning: local version (v$PSTM_VERSION) is ahead of remote (v$remoteVer). Skipping update."
     }
 }
 
@@ -445,27 +429,27 @@ switch ($command) {
     "-uninstall" { Uninstall-PST }
     "-uninstall-all" { Uninstall-All }
     "-update-self" {
-        Show-Banner
-        Write-Host -ForegroundColor Yellow "> Checking for pstm update..."
+    
+        Write-Host "> Checking for pstm update..."
         $remoteVer = Get-LatestPstmVersion
         if (-not $remoteVer) {
-            Write-Host -ForegroundColor Red "x Error: Could not fetch remote version."
+            Write-Host "x Error: Could not fetch remote version."
         } else {
             $cmp = Compare-Versions -V1 $remoteVer -V2 $PSTM_VERSION
             if ($cmp -eq 1) {
                 Update-Self
             } elseif ($cmp -eq 0) {
-                Write-Host -ForegroundColor Green "* pstm is already up to date (v$PSTM_VERSION)."
+                Write-Host "* pstm is already up to date (v$PSTM_VERSION)."
             } else {
-                Write-Host -ForegroundColor Yellow "Warning: local version (v$PSTM_VERSION) is ahead of remote (v$remoteVer). Skipping update."
+                Write-Host "Warning: local version (v$PSTM_VERSION) is ahead of remote (v$remoteVer). Skipping update."
             }
         }
     }
     default {
-        Write-Host -ForegroundColor Red "x Unknown command: $command"
-        Write-Host -ForegroundColor Yellow "  Run " -NoNewline
-        Write-Host -ForegroundColor Cyan "pstm -h" -NoNewline
-        Write-Host -ForegroundColor Yellow " for help."
+        Write-Host "x Unknown command: $command"
+        Write-Host "  Run " -NoNewline
+        Write-Host "pstm -h" -NoNewline
+        Write-Host " for help."
         exit 1
     }
 }
