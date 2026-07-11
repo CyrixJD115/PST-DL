@@ -1,22 +1,16 @@
 # PST Manager
 
-A cross-platform CLI version manager for [PalworldSaveTools](https://github.com/deafdudecomputers/PalworldSaveTools). Download, install, upgrade, and manage PalworldSaveTools from your terminal.
+A CLI version manager for [PalworldSaveTools](https://github.com/deafdudecomputers/PalworldSaveTools). Download, install, upgrade, and manage PalworldSaveTools from your terminal.
 
 ## Quick Install
 
-**Linux / macOS:**
 ```bash
 curl -LsSf https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Unix/install.sh | sh
 ```
 
-**Linux / macOS (verbose mode):**
+**Verbose mode:**
 ```bash
 curl -LsSf https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Unix/install.sh | sh -s -- --verbose
-```
-
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Windows/install.ps1 | iex
 ```
 
 ## Commands
@@ -35,51 +29,35 @@ irm https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Windows/insta
 
 ```
 PST-Manager/
-├── .Unix/
-│   ├── pstm              # CLI tool (bash) - Linux/macOS
-│   └── install.sh        # Bootstrap installer (curl | sh)
-├── .Windows/
-│   ├── pstm.ps1          # CLI tool (PowerShell) - Windows
-│   └── install.ps1       # Bootstrap installer (irm | iex)
-└── README.md
+└── .Unix/
+    ├── pstm              # CLI tool (bash)
+    └── install.sh        # Bootstrap installer (curl | sh)
 ```
 
 ## Install Locations
 
-| Component | Windows | Linux / macOS |
-|-----------|---------|---------------|
-| pstm binary | `%LOCALAPPDATA%\pstm\pstm.ps1` | `~/.local/bin/pstm` |
-| PST data | `%LOCALAPPDATA%\palworldsavetools\` | `~/.local/share/palworldsavetools/` |
+| Component | Path |
+|-----------|------|
+| pstm binary | `~/.local/bin/pstm` |
+| PST data | `~/.local/share/palworldsavetools/` |
 
-### Directory Structure (both platforms)
+### Directory Structure
 
 ```
 <pst_data_dir>/
 ├── source/       # extracted source code from .zip
-└── pst           # launcher (pst.ps1 on Windows, pst on Unix)
+└── pst           # launcher script
 ```
 
 ## How It Works
 
-Both platforms:
 - Download the source `.zip` from GitHub tags
 - Extract to `<data>/source/`
 - Auto-install [uv](https://github.com/astral-sh/uv) if not present
 - Generate a launcher that runs `uv python install 3.13` then `uv run ./start.py`
 
-### Windows launcher
-- Generates a `pst.ps1` launcher script
-- Creates a desktop shortcut with icon
-
-### Unix launcher
-- Generates executable `pst` bash script
-
 ## Requirements
 
-### Windows
-- PowerShell 5.1+
-
-### Linux / macOS
 - Bash, curl, unzip
 
 ## Auto-Update
