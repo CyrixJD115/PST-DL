@@ -23,7 +23,7 @@ irm https://raw.githubusercontent.com/CyrixJD115/PST-Manager/main/.Windows/insta
 
 - `pstm -h` or `pstm -help` - Show help
 - `pstm -v` or `pstm -version` - Show pstm and remote PST version
-- `pstm -i` or `pstm -install` - Download and install PalworldSaveTools
+- `pstm -i` or `pstm -install` - Download and install the latest PalworldSaveTools
 - `pstm run` - Run PalworldSaveTools
 - `pstm -u` or `pstm -upgrade` - Update PalworldSaveTools to the latest version
 - `pstm -update-self` - Update pstm to the latest version
